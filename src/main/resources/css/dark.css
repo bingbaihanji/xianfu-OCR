@@ -1,0 +1,228 @@
+/* 显符OCR 暗色主题：全组件统一色板（looked-up colors），无散落硬编码颜色 */
+
+.root {
+    -fx-bg: #1B1B22;
+    -fx-panel: #23232E;
+    -fx-hover: #2C2C3A;
+    -fx-border: #3A3A4A;
+    -fx-text: #E8E8F0;
+    -fx-text-dim: #9A9AAE;
+    -fx-accent: #5AB0FF;
+    -fx-danger: #E06C75;
+    -fx-background: -fx-bg;
+    -fx-font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text;
+}
+
+/* ---------- 文本 ---------- */
+.label {
+    -fx-text-fill: -fx-text;
+}
+.label-dim {
+    -fx-text-fill: -fx-text-dim;
+}
+
+/* ---------- 按钮 ---------- */
+.button {
+    -fx-background-color: -fx-panel;
+    -fx-text-fill: -fx-text;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 8;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+}
+.button:hover {
+    -fx-background-color: -fx-hover;
+}
+.button:pressed {
+    -fx-background-color: #1B1B22;
+}
+.button.primary {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: #10141C;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+}
+.button.primary:hover {
+    -fx-background-color: #7BC2FF;
+}
+
+/* ---------- 输入控件 ---------- */
+.text-area,
+.text-field,
+.password-field {
+    -fx-background-color: -fx-panel;
+    -fx-text-fill: -fx-text;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 8;
+    -fx-prompt-text-fill: -fx-text-dim;
+}
+.text-area {
+    -fx-font-family: "Segoe UI", "Microsoft YaHei UI", sans-serif;
+}
+.text-area .content {
+    -fx-background-color: -fx-panel;
+    -fx-background-radius: 8;
+}
+.text-area:focused,
+.text-field:focused {
+    -fx-border-color: -fx-accent;
+}
+
+/* ---------- 列表 ---------- */
+.list-view {
+    -fx-background-color: -fx-panel;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 8;
+}
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text;
+    -fx-padding: 6 10 6 10;
+}
+.list-cell:filled:hover {
+    -fx-background-color: -fx-hover;
+}
+.list-cell:filled:selected {
+    -fx-background-color: rgba(90, 176, 255, 0.25);
+}
+
+/* ---------- 菜单 ---------- */
+.menu-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.menu-bar .label,
+.menu .label {
+    -fx-text-fill: -fx-text;
+}
+.menu {
+    -fx-background-color: transparent;
+}
+.context-menu {
+    -fx-background-color: -fx-panel;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.menu-item {
+    -fx-background-color: transparent;
+}
+.menu-item .label {
+    -fx-text-fill: -fx-text;
+}
+.menu-item:focused {
+    -fx-background-color: -fx-hover;
+}
+
+/* ---------- 分栏 ---------- */
+.split-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.split-pane-divider {
+    -fx-background-color: -fx-border;
+    -fx-padding: 0 1 0 1;
+}
+
+/* ---------- 表单控件 ---------- */
+.slider .track {
+    -fx-background-color: -fx-border;
+    -fx-background-radius: 4;
+}
+.slider .thumb {
+    -fx-background-color: -fx-accent;
+    -fx-background-radius: 8;
+}
+.combo-box {
+    -fx-background-color: -fx-panel;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.combo-box .list-cell {
+    -fx-text-fill: -fx-text;
+    -fx-background-color: transparent;
+}
+.combo-box-popup .list-view {
+    -fx-border-color: -fx-border;
+}
+.spinner {
+    -fx-background-color: -fx-panel;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.check-box {
+    -fx-text-fill: -fx-text;
+}
+.check-box .box {
+    -fx-background-color: -fx-panel;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+.check-box:selected .mark {
+    -fx-background-color: -fx-accent;
+}
+.toggle-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-dim;
+    -fx-background-radius: 8;
+}
+.toggle-button:selected {
+    -fx-background-color: -fx-hover;
+    -fx-text-fill: -fx-text;
+}
+
+/* ---------- 滚动条 ---------- */
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #3A3A4A;
+    -fx-background-radius: 4;
+}
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+}
+
+/* ---------- 提示与状态 ---------- */
+.tooltip {
+    -fx-background-color: -fx-hover;
+    -fx-text-fill: -fx-text;
+    -fx-border-color: -fx-border;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+.progress-indicator {
+    -fx-progress-color: -fx-accent;
+}
+
+/* ---------- 自定义组件 ---------- */
+#status-bar {
+    -fx-background-color: -fx-panel;
+    -fx-border-color: -fx-border transparent transparent transparent;
+}
+#image-pane {
+    -fx-background-color: #16161C;
+    -fx-background-radius: 8;
+}
+.toast {
+    -fx-background-color: #2C2C3A;
+    -fx-background-radius: 8;
+    -fx-border-color: -fx-border;
+    -fx-border-radius: 8;
+}
+.toast-error {
+    -fx-background-color: #3A2C30;
+    -fx-border-color: -fx-danger;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
