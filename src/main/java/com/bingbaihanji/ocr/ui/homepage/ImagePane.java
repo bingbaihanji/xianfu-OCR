@@ -145,11 +145,30 @@ public class ImagePane extends StackPane {
         double dispH = ih * baseScale;
         imageView.setFitWidth(dispW);
         imageView.setFitHeight(dispH);
+        // 框叠加层钉死为显示尺寸：与 ImageView 同原点同大小，识别框才能与像素对齐
+        boxLayer.setPrefSize(dispW, dispH);
+        boxLayer.setMinSize(dispW, dispH);
+        boxLayer.setMaxSize(dispW, dispH);
         content.setPrefSize(dispW, dispH);
         content.setMinSize(dispW, dispH);
         content.setMaxSize(dispW, dispH);
+        content.resize(dispW, dispH);
+        placeContent();
         applyTransform();
         redrawBoxes();
+    }
+
+    // content 是 unmanaged 节点，父布局不会为它居中——手工摆放（缩放/平移走变换，不影响布局位置）
+    private void placeContent() {
+        content.relocate((getWidth() - content.getWidth()) / 2, (getHeight() - content.getHeight()) / 2);
+    }
+
+    @Override
+    protected void layoutChildren() {
+        super.layoutChildren();
+        if (source != null) {
+            placeContent();
+        }
     }
 
     private void applyTransform() {
