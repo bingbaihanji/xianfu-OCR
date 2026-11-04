@@ -81,6 +81,7 @@ public class XianFuOCRApplication extends Application {
         shutDown = true;
         if (controller != null) {
             controller.persistWindowState();
+            controller.dispose();
         }
         if (settings != null && jarDir != null) {
             try {

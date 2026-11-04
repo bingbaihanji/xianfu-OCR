@@ -1,6 +1,7 @@
 package com.bingbaihanji.ocr.ui.settings;
 
 import com.bingbaihanji.model.ocr.enums.OcrModel;
+import com.bingbaihanji.ocr.hotkey.HotkeyBinding;
 import com.bingbaihanji.ocr.settings.AppSettings;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -16,6 +17,8 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HeaderBar;
@@ -31,13 +34,19 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-// 设置对话框：识别 / 窗口 / 关于 三页（快捷键页由计划 B 追加）
+// 设置对话框：识别 / 快捷键 / 窗口 / 关于 四页
 public class SettingsDialog extends Stage {
 
     private final AppSettings edited;
     private final Consumer<AppSettings> onApply;
+    private final Label conflictLabel = new Label();
+    private List<HotkeyRow> hotkeyRows;
+    private HotkeyRow recording;
 
     public SettingsDialog(Window owner, AppSettings current, Consumer<AppSettings> onApply) {
         this.edited = current.copy();
@@ -61,23 +70,27 @@ public class SettingsDialog extends Stage {
         // 左侧导航
         ToggleGroup navGroup = new ToggleGroup();
         ToggleButton navRecognize = navButton("识别", navGroup, true);
+        ToggleButton navHotkeys = navButton("快捷键", navGroup, false);
         ToggleButton navWindow = navButton("窗口", navGroup, false);
         ToggleButton navAbout = navButton("关于", navGroup, false);
-        VBox nav = new VBox(4, navRecognize, navWindow, navAbout);
+        VBox nav = new VBox(4, navRecognize, navHotkeys, navWindow, navAbout);
         nav.setPadding(new Insets(8));
         nav.setPrefWidth(110);
 
         // 右侧面板
         StackPane cards = new StackPane();
         VBox recognizeCard = buildRecognizeCard();
+        VBox hotkeysCard = buildHotkeysCard();
         VBox windowCard = buildWindowCard();
         VBox aboutCard = buildAboutCard();
-        cards.getChildren().addAll(recognizeCard, windowCard, aboutCard);
+        cards.getChildren().addAll(recognizeCard, hotkeysCard, windowCard, aboutCard);
+        hotkeysCard.setVisible(false);
         windowCard.setVisible(false);
         aboutCard.setVisible(false);
 
         navGroup.selectedToggleProperty().addListener((o, a, b) -> {
             recognizeCard.setVisible(b == navRecognize);
+            hotkeysCard.setVisible(b == navHotkeys);
             windowCard.setVisible(b == navWindow);
             aboutCard.setVisible(b == navAbout);
         });
@@ -105,6 +118,7 @@ public class SettingsDialog extends Stage {
 
         Scene scene = new Scene(root, 680, 460);
         scene.getStylesheets().add(getClass().getResource("/css/dark.css").toExternalForm());
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, this::handleRecordingKey);
         setScene(scene);
     }
 
@@ -189,6 +203,114 @@ public class SettingsDialog extends Stage {
         VBox box = new VBox(8, name, engine, privacy, models);
         box.setPadding(new Insets(16));
         return box;
+    }
+
+    private VBox buildHotkeysCard() {
+        Label hint = new Label("点击「录制」后按下新组合键（Esc 取消）。与其他动作冲突会提示并保留原值。");
+        hint.getStyleClass().add("label-dim");
+        hint.setWrapText(true);
+
+        hotkeyRows = new ArrayList<>(List.of(
+                new HotkeyRow("截图识别", edited::getHotkeyCaptureRecognize, edited::setHotkeyCaptureRecognize),
+                new HotkeyRow("截图贴图", edited::getHotkeyCapturePin, edited::setHotkeyCapturePin),
+                new HotkeyRow("显示/隐藏主窗口", edited::getHotkeyToggleWindow, edited::setHotkeyToggleWindow)));
+
+        VBox rows = new VBox(8);
+        for (HotkeyRow row : hotkeyRows) {
+            Label name = new Label(row.name);
+            name.setMinWidth(120);
+            row.button = new Button();
+            row.button.setMinWidth(170);
+            row.button.setOnAction(e -> startRecording(row));
+            refreshHotkeyButton(row);
+            HBox line = new HBox(12, name, row.button);
+            line.setAlignment(Pos.CENTER_LEFT);
+            rows.getChildren().add(line);
+        }
+
+        conflictLabel.getStyleClass().add("label-conflict");
+        conflictLabel.setWrapText(true);
+
+        Button defaults = new Button("恢复默认");
+        defaults.setOnAction(e -> {
+            edited.setHotkeyCaptureRecognize(HotkeyBinding.DEFAULT_CAPTURE_RECOGNIZE);
+            edited.setHotkeyCapturePin(HotkeyBinding.DEFAULT_CAPTURE_PIN);
+            edited.setHotkeyToggleWindow(HotkeyBinding.DEFAULT_TOGGLE_WINDOW);
+            hotkeyRows.forEach(this::refreshHotkeyButton);
+            conflictLabel.setText("");
+        });
+
+        VBox box = new VBox(12, hint, rows, conflictLabel, defaults);
+        box.setPadding(new Insets(16));
+        return box;
+    }
+
+    // ------------------------------------------------------------------ 快捷键录制
+
+    private void startRecording(HotkeyRow row) {
+        stopRecording();
+        recording = row;
+        row.button.setText("请按下组合键…");
+        row.button.getStyleClass().add("recording");
+        conflictLabel.setText("");
+    }
+
+    private void stopRecording() {
+        if (recording != null) {
+            recording.button.getStyleClass().remove("recording");
+            refreshHotkeyButton(recording);
+            recording = null;
+        }
+    }
+
+    private void handleRecordingKey(KeyEvent e) {
+        if (recording == null) {
+            return;
+        }
+        e.consume();
+        if (e.getCode() == KeyCode.ESCAPE) {
+            stopRecording();
+            return;
+        }
+        try {
+            HotkeyBinding binding = HotkeyBinding.fromFx(e.getCode(),
+                    e.isControlDown(), e.isShiftDown(), e.isAltDown(), e.isMetaDown());
+            String combo = binding.combo();
+            for (HotkeyRow other : hotkeyRows) {
+                if (other != recording && other.get.get().equals(combo)) {
+                    conflictLabel.setText("与「" + other.name + "」冲突: " + binding.display());
+                    return;
+                }
+            }
+            recording.set.accept(combo);
+            conflictLabel.setText("");
+            stopRecording();
+        } catch (IllegalArgumentException ex) {
+            conflictLabel.setText(ex.getMessage() + "（Esc 取消录制）");
+        }
+    }
+
+    private void refreshHotkeyButton(HotkeyRow row) {
+        try {
+            row.button.setText(HotkeyBinding.parse(row.get.get()).display());
+        } catch (RuntimeException e) {
+            row.button.setText(row.get.get());
+        }
+    }
+
+    // 一行快捷键设置：动作名、当前值读写、按钮
+    private static final class HotkeyRow {
+
+        final String name;
+        final Supplier<String> get;
+        final Consumer<String> set;
+        Button button;
+
+        HotkeyRow(String name, Supplier<String> get, Consumer<String> set) {
+            this.name = name;
+            this.get = get;
+            this.set = set;
+        }
     }
 
     // ------------------------------------------------------------------ 工具

@@ -21,16 +21,19 @@ public class CaptureController {
 
     private final CaptureMode mode;
     private final Consumer<BufferedImage> onRecognizeImage;
+    private final Runnable onClose;
     private final List<CaptureOverlay> overlays = new ArrayList<>();
 
     private CaptureToolbar toolbar;
     private BufferedImage pendingCrop;
     private Rectangle2D pendingSelScreenRect;
 
-    // onRecognizeImage：识别模式下用户点「识别」时回调裁剪图（交主窗口展示）
-    public CaptureController(CaptureMode mode, Consumer<BufferedImage> onRecognizeImage) {
+    // onRecognizeImage：识别模式下用户点「识别」时回调裁剪图（交主窗口展示）；
+    // onClose：会话结束（取消/完成）时回调，供调用方解除「进行中」标记
+    public CaptureController(CaptureMode mode, Consumer<BufferedImage> onRecognizeImage, Runnable onClose) {
         this.mode = mode;
         this.onRecognizeImage = onRecognizeImage;
+        this.onClose = onClose;
     }
 
     // 启动截图（先捕获后显示遮罩）；失败抛 IllegalStateException
@@ -49,7 +52,7 @@ public class CaptureController {
         }
     }
 
-    // 关闭全部截图相关窗口
+    // 关闭全部截图相关窗口（幂等）
     public void close() {
         for (CaptureOverlay o : overlays) {
             o.close();
@@ -59,6 +62,7 @@ public class CaptureController {
             toolbar.close();
             toolbar = null;
         }
+        onClose.run();
     }
 
     // ------------------------------------------------------------------ 回调
@@ -79,6 +83,7 @@ public class CaptureController {
             log.info("截图完成: {}×{} mode={}", pendingCrop.getWidth(), pendingCrop.getHeight(), mode);
             if (mode == CaptureMode.PIN) {
                 pin();
+                close();
             } else {
                 showToolbar(bounds);
             }

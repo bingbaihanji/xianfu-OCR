@@ -2,6 +2,10 @@ package com.bingbaihanji.ocr.ui;
 
 import com.bingbaihanji.model.ocr.config.OcrConfig;
 import com.bingbaihanji.model.ocr.result.OcrResult;
+import com.bingbaihanji.ocr.capture.CaptureController;
+import com.bingbaihanji.ocr.capture.CaptureMode;
+import com.bingbaihanji.ocr.hotkey.GlobalHotkey;
+import com.bingbaihanji.ocr.hotkey.HotkeyBinding;
 import com.bingbaihanji.ocr.service.AnnotatedImageRenderer;
 import com.bingbaihanji.ocr.service.RecognitionService;
 import com.bingbaihanji.ocr.settings.AppSettings;
@@ -37,6 +41,11 @@ public class AppController {
 
     private static final Logger log = LoggerFactory.getLogger(AppController.class);
 
+    // 全局热键 id
+    private static final int HOTKEY_CAPTURE_RECOGNIZE = 1;
+    private static final int HOTKEY_CAPTURE_PIN = 2;
+    private static final int HOTKEY_TOGGLE_WINDOW = 3;
+
     private final Stage stage;
     private final RecognitionService recognition;
     private final AppSettings settings;
@@ -45,6 +54,8 @@ public class AppController {
 
     private BufferedImage currentImage;
     private OcrResult lastResult;
+    private GlobalHotkey globalHotkey;
+    private CaptureController activeCapture;
 
     public AppController(Stage stage, RecognitionService recognition, AppSettings settings, Path jarDir) {
         this.stage = stage;
@@ -61,11 +72,25 @@ public class AppController {
         return view;
     }
 
-    // 启动后调用：后台预热当前模型
+    // 启动后调用：注册全局热键 + 后台预热当前模型
     public void start() {
+        globalHotkey = new GlobalHotkey(this::onGlobalHotkey);
+        registerHotkeys();
         BufferedImage warm = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
         recognition.submit(warm, buildConfig(), r -> {
         }, t -> view.toast().showError("模型预热失败: " + t.getMessage()));
+    }
+
+    // 退出前释放全局热键与进行中的截图
+    public void dispose() {
+        if (activeCapture != null) {
+            activeCapture.close();
+            activeCapture = null;
+        }
+        if (globalHotkey != null) {
+            globalHotkey.close();
+            globalHotkey = null;
+        }
     }
 
     // 退出前保存窗口状态到 settings
@@ -98,9 +123,66 @@ public class AppController {
         }
     }
 
+    // ------------------------------------------------------------------ 截图与全局热键
+
+    // 启动截图（进行中时忽略重复触发）
+    public void openCapture(CaptureMode mode) {
+        if (activeCapture != null) {
+            return;
+        }
+        CaptureController c = new CaptureController(mode,
+                img -> showImage(img, "截图"),
+                () -> activeCapture = null);
+        activeCapture = c;
+        try {
+            c.start();
+        } catch (RuntimeException e) {
+            activeCapture = null;
+            c.close();
+            view.toast().showError(e.getMessage());
+        }
+    }
+
+    private void onGlobalHotkey(int id) {
+        switch (id) {
+            case HOTKEY_CAPTURE_RECOGNIZE -> openCapture(CaptureMode.RECOGNIZE);
+            case HOTKEY_CAPTURE_PIN -> openCapture(CaptureMode.PIN);
+            case HOTKEY_TOGGLE_WINDOW -> toggleWindow();
+            default -> {
+            }
+        }
+    }
+
+    private void toggleWindow() {
+        if (stage.isShowing() && stage.isFocused()) {
+            stage.setIconified(true);
+        } else {
+            stage.setIconified(false);
+            stage.show();
+            stage.toFront();
+        }
+    }
+
+    private void registerHotkeys() {
+        registerOne(HOTKEY_CAPTURE_RECOGNIZE, settings.getHotkeyCaptureRecognize());
+        registerOne(HOTKEY_CAPTURE_PIN, settings.getHotkeyCapturePin());
+        registerOne(HOTKEY_TOGGLE_WINDOW, settings.getHotkeyToggleWindow());
+    }
+
+    private void registerOne(int id, String combo) {
+        try {
+            if (!globalHotkey.register(id, HotkeyBinding.parse(combo))) {
+                view.toast().showError("热键被占用: " + combo);
+            }
+        } catch (RuntimeException e) {
+            view.toast().showError("热键注册失败: " + combo);
+        }
+    }
+
     // ------------------------------------------------------------------ 装配
 
     private void wire() {
+        view.screenshotButton().setOnAction(e -> openCapture(CaptureMode.RECOGNIZE));
         view.openButton().setOnAction(e -> openImage());
         view.resultPane().setOnCopy(this::copyText);
         view.resultPane().setOnLineHover(i -> {
@@ -295,6 +377,7 @@ public class AppController {
             settings.copyFrom(updated);
             try {
                 SettingsStore.save(jarDir, settings);
+                registerHotkeys();
                 view.toast().show("设置已保存");
             } catch (IOException e) {
                 view.toast().showError("设置保存失败: " + e.getMessage());

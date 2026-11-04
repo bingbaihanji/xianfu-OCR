@@ -37,6 +37,7 @@ public class Homepage extends StackPane {
     private final ResultPane resultPane = new ResultPane();
     private final StatusBar statusBar = new StatusBar();
     private final Toast toast = new Toast();
+    private final Button screenshotButton = new Button("截图识别");
     private final Button openButton = new Button("打开图片");
 
     public Homepage(AppMenuBar menuBar) {
@@ -46,7 +47,7 @@ public class Homepage extends StackPane {
         topBar.setPadding(new Insets(4, 8, 8, 8));
         HBox.setHgrow(topBar.getChildren().get(0), Priority.ALWAYS);
 
-        HBox toolRow = new HBox(menuBar, openButton);
+        HBox toolRow = new HBox(menuBar, screenshotButton, openButton);
         toolRow.setAlignment(Pos.CENTER_LEFT);
         toolRow.setPadding(new Insets(0, 8, 8, 8));
         HBox.setHgrow(menuBar, Priority.ALWAYS);
@@ -88,6 +89,10 @@ public class Homepage extends StackPane {
 
     public Button openButton() {
         return openButton;
+    }
+
+    public Button screenshotButton() {
+        return screenshotButton;
     }
 
     // ------------------------------------------------------------------ 构建

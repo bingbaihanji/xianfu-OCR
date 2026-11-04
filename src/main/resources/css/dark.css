@@ -226,3 +226,38 @@
     -fx-background-radius: 8;
     -fx-border-radius: 8;
 }
+
+/* ---------- 截图与贴图 ---------- */
+.capture-hint {
+    -fx-background-color: #2C2C3A;
+    -fx-text-fill: #E8E8F0;
+    -fx-background-radius: 4;
+    -fx-padding: 2 6 2 6;
+    -fx-font-size: 12px;
+}
+.capture-magnifier {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 8, 0.3, 0, 2);
+}
+.capture-toolbar {
+    -fx-background-color: #23232E;
+    -fx-background-radius: 8;
+    -fx-border-color: #3A3A4A;
+    -fx-border-radius: 8;
+    -fx-padding: 6;
+    -fx-alignment: center-left;
+}
+.pin-window {
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-border-radius: 2;
+}
+.pin-window.pin-hover {
+    -fx-border-color: -fx-accent;
+}
+.label-conflict {
+    -fx-text-fill: #E06C75;
+}
+.recording {
+    -fx-background-color: #3A2C30;
+    -fx-border-color: #E06C75;
+}
