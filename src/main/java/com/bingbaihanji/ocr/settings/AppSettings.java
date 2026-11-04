@@ -1,14 +1,19 @@
 package com.bingbaihanji.ocr.settings;
 
 import com.bingbaihanji.model.ocr.enums.OcrModel;
+import com.bingbaihanji.ocr.hotkey.HotkeyBinding;
 
-// 应用设置（可变）：识别参数、窗口状态与最近目录；序列化经 SettingsStore
+// 应用设置（可变）：识别参数、快捷键、窗口状态与最近目录；序列化经 SettingsStore
 public class AppSettings {
 
     private OcrModel model = OcrModel.PPOCR_V5;
     private double minConfidence = 0.5;
     private int maxSideLen = 960;
     private boolean enableRotate = false;
+
+    private String hotkeyCaptureRecognize = HotkeyBinding.DEFAULT_CAPTURE_RECOGNIZE;
+    private String hotkeyCapturePin = HotkeyBinding.DEFAULT_CAPTURE_PIN;
+    private String hotkeyToggleWindow = HotkeyBinding.DEFAULT_TOGGLE_WINDOW;
 
     private boolean rememberWindow = true;
     private double windowX = Double.NaN;
@@ -107,6 +112,33 @@ public class AppSettings {
         return clearClipboardOnExit;
     }
 
+    public String getHotkeyCaptureRecognize() {
+        return hotkeyCaptureRecognize;
+    }
+
+    public void setHotkeyCaptureRecognize(String hotkeyCaptureRecognize) {
+        this.hotkeyCaptureRecognize = hotkeyCaptureRecognize == null
+                ? HotkeyBinding.DEFAULT_CAPTURE_RECOGNIZE : hotkeyCaptureRecognize;
+    }
+
+    public String getHotkeyCapturePin() {
+        return hotkeyCapturePin;
+    }
+
+    public void setHotkeyCapturePin(String hotkeyCapturePin) {
+        this.hotkeyCapturePin = hotkeyCapturePin == null
+                ? HotkeyBinding.DEFAULT_CAPTURE_PIN : hotkeyCapturePin;
+    }
+
+    public String getHotkeyToggleWindow() {
+        return hotkeyToggleWindow;
+    }
+
+    public void setHotkeyToggleWindow(String hotkeyToggleWindow) {
+        this.hotkeyToggleWindow = hotkeyToggleWindow == null
+                ? HotkeyBinding.DEFAULT_TOGGLE_WINDOW : hotkeyToggleWindow;
+    }
+
     public void setClearClipboardOnExit(boolean clearClipboardOnExit) {
         this.clearClipboardOnExit = clearClipboardOnExit;
     }
@@ -147,6 +179,9 @@ public class AppSettings {
         this.windowHeight = other.windowHeight;
         this.windowMaximized = other.windowMaximized;
         this.clearClipboardOnExit = other.clearClipboardOnExit;
+        this.hotkeyCaptureRecognize = other.hotkeyCaptureRecognize;
+        this.hotkeyCapturePin = other.hotkeyCapturePin;
+        this.hotkeyToggleWindow = other.hotkeyToggleWindow;
         this.lastOpenDir = other.lastOpenDir;
         this.lastExportDir = other.lastExportDir;
     }

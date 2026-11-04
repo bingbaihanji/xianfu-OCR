@@ -1,6 +1,7 @@
 package com.bingbaihanji.ocr.settings;
 
 import com.bingbaihanji.model.ocr.enums.OcrModel;
+import com.bingbaihanji.ocr.hotkey.HotkeyBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,6 +76,9 @@ public final class SettingsStore {
         m.put("windowHeight", s.getWindowHeight());
         m.put("windowMaximized", s.isWindowMaximized());
         m.put("clearClipboardOnExit", s.isClearClipboardOnExit());
+        m.put("hotkey.captureRecognize", s.getHotkeyCaptureRecognize());
+        m.put("hotkey.capturePin", s.getHotkeyCapturePin());
+        m.put("hotkey.toggleWindow", s.getHotkeyToggleWindow());
         m.put("lastOpenDir", s.getLastOpenDir());
         m.put("lastExportDir", s.getLastExportDir());
         return m;
@@ -93,6 +97,9 @@ public final class SettingsStore {
         s.setWindowHeight(num(m, "windowHeight", 720));
         s.setWindowMaximized(bool(m, "windowMaximized", false));
         s.setClearClipboardOnExit(bool(m, "clearClipboardOnExit", false));
+        s.setHotkeyCaptureRecognize(str(m, "hotkey.captureRecognize", HotkeyBinding.DEFAULT_CAPTURE_RECOGNIZE));
+        s.setHotkeyCapturePin(str(m, "hotkey.capturePin", HotkeyBinding.DEFAULT_CAPTURE_PIN));
+        s.setHotkeyToggleWindow(str(m, "hotkey.toggleWindow", HotkeyBinding.DEFAULT_TOGGLE_WINDOW));
         s.setLastOpenDir(str(m, "lastOpenDir", ""));
         s.setLastExportDir(str(m, "lastExportDir", ""));
         return s;
