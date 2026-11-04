@@ -22,6 +22,13 @@ import java.nio.file.Path;
 // 应用入口：装配设置/识别服务/主窗口，管理生命周期
 public class XianFuOCRApplication extends Application {
 
+    static {
+        // StageStyle.EXTENDED/HeaderBar 是 JavaFX 25 的预览特性。
+        // 注意：JavaFX 25.0.3 的检查只认 JVM 启动参数 -Djavafx.enablePreview=true
+        // （IDEA 运行配置需自行添加该 VM 选项）；此处设置属性为旧版 JavaFX 的兜底。
+        System.setProperty("javafx.enablePreview", "true");
+    }
+
     private static final Logger log = LoggerFactory.getLogger(XianFuOCRApplication.class);
 
     private Path jarDir;
