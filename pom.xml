@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.bingbaihanji.ocr</groupId>
+    <artifactId>xianfu</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <description>显符OCR: 基于百度飞桨模型的本地截图识别工具</description>
+
+    <properties>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+        <jfx.version>25.0.2</jfx.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+
+    <dependencies>
+        <!-- ONNX Runtime CPU 版。win-x64 原生库仅 17.4 MB
+             （GPU 版 jar 384 MB，其中 CUDA provider DLL 就 196 MB，且本机未装 CUDA 运行时）。
+             将来要用 GPU 时改回 onnxruntime_gpu 即可。 -->
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>1.31.0</version>
+        </dependency>
+
+
+        <!-- slf4j与logback集成配置 -->
+        <!-- slf4j日志门面 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+        <!-- logback 日志实现-->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.4.14</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.14</version>
+        </dependency>
+
+        <!--lombok依赖：只在编译期生成代码（@Slf4j 等），运行时不需要，故 provided -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.42</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <!-- OpenCV：只保留 win-x64 原生库，不再拉全平台。
+             javacv 已删除——源码零引用，却拖入 ffmpeg / flycapture / libdc1394 /
+             libfreenect / libfreenect2 / librealsense / librealsense2 / videoinput /
+             artoolkitplus / leptonica / tesseract 的全平台原生库。
+             注意：bytedeco 没有独立的 opencv-windows-x86_64 构件，平台原生库是
+             主构件的 classifier；且 opencv_core4110.dll 静态导入 libopenblas.dll，
+             必须一并带上 openblas 的 win-x64 原生库，否则 OpenCV 原生库加载失败。 -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.11.0-1.5.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.11.0-1.5.12</version>
+            <classifier>windows-x86_64</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>openblas</artifactId>
+            <version>0.3.30-1.5.12</version>
+            <classifier>windows-x86_64</classifier>
+        </dependency>
+
+        <!-- 多边形外扩（DB unclip），语义等同 Python pyclipper JT_ROUND -->
+        <dependency>
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
+            <version>1.20.0</version>
+        </dependency>
+
+
+
+        <!--javafx跨平台-->
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-base -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>${jfx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>${jfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-base</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>linux</classifier>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-base</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>mac</classifier>-->
+        <!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${jfx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${jfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-fxml</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>linux</classifier>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-fxml</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>mac</classifier>-->
+        <!--        </dependency>-->
+
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${jfx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${jfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-controls</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>linux</classifier>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-controls</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>mac</classifier>-->
+        <!--        </dependency>-->
+
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>${jfx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-media</artifactId>
+            <version>${jfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-media</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>linux</classifier>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-media</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>mac</classifier>-->
+        <!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${jfx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${jfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-graphics</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>linux</classifier>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-graphics</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>mac</classifier>-->
+        <!--        </dependency>-->
+
+
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${jfx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${jfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-swing</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>linux</classifier>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.openjfx</groupId>-->
+        <!--            <artifactId>javafx-swing</artifactId>-->
+        <!--            <version>${jfx.version}</version>-->
+        <!--            <classifier>mac</classifier>-->
+        <!--        </dependency>-->
+
+        <!-- JUnit 5：仅测试用 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Surefire 3.x 才支持 JUnit5（Maven 默认的 2.12.4 不行） -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+            </plugin>
+
+            <!-- JDK 23+ 默认不再从 classpath 自动捡注解处理器，
+                 Lombok 必须显式配置 annotationProcessorPaths 才会生成 @Slf4j 的 log 字段 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>25</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.42</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <!-- 打可执行 fat jar，直接落到项目 bin/ 目录 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- 不设 outputDirectory / finalName：shade 3.6.0 的
+                                 outputDirectory 实测会把「未合并」的 original-*.jar
+                                 丢进目标目录，而合并后的 jar 仍留在 target/，
+                                 与插件文档描述相反。故让它写默认位置，
+                                 再用下面的 antrun 显式拷到 bin/。 -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.bingbaihanji.model.Main</mainClass>
+                                    <!-- JDK 25 起 System.load 受限；不声明则未来 JDK 会直接拒绝加载原生库 -->
+                                    <manifestEntries>
+                                        <Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- 签名文件，合并后会失效 -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <!-- src/main/resources/native/ 下的 opencv_java4110.dll
+                                             （x64 51.7 MB + x86 34.8 MB）是早期 OpenCV Java 绑定的
+                                             残留，代码零 org.opencv.* 引用，实际加载走 bytedeco 的
+                                             jniopencv_*。OpenCVInitializer 的 extractDllFromJar
+                                             找的是 /x64/... 而资源在 /native/x64/...，永远找不到，
+                                             纯属死重且每次运行打一条误导性 ERROR。 -->
+                                        <exclude>native/**</exclude>
+                                        <!-- ppocrv6 的 HuggingFace 原始元数据
+                                             （README/inference.json/inference.yml），
+                                             运行时用不到；字典已提取为 ppocrv6_dict.txt -->
+                                        <exclude>model/ppocrv6/_source/**</exclude>
+                                        <!-- Lombok 只在编译期生成代码，运行时不需要 -->
+                                        <exclude>**/lombok/**</exclude>
+                                        <!-- logback-access 是 HTTP 访问日志（Tomcat/Jetty 用），
+                                             本项目无 Servlet，纯死重 -->
+                                        <exclude>ch/qos/logback/access/**</exclude>
+                                        <exclude>**/jakarta/servlet/**</exclude>
+                                        <exclude>**/javax/servlet/**</exclude>
+                                        <!-- 依赖清单元数据，合并后无意义 -->
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <!-- ORT CPU 包里带了 linux-aarch64 / linux-x64 /
+                                             osx-aarch64（连 macOS dSYM 调试符号）三个平台的
+                                             原生库，合计约 149 MB，win 部署一概用不到 -->
+                                        <exclude>ai/onnxruntime/native/linux-*/**</exclude>
+                                        <exclude>ai/onnxruntime/native/osx-*/**</exclude>
+                                        <exclude>ai/onnxruntime/native/android-*/**</exclude>
+                                        <exclude>**/*.dSYM/**</exclude>
+                                        <!-- 链接期产物，运行时一概不需要：
+                                             .lib 导入库、.obj 目标文件、.exp 导出表。
+                                             openblas 的 win-x64 包里这三类合计约 200 MB -->
+                                        <exclude>org/bytedeco/**/*.lib</exclude>
+                                        <exclude>org/bytedeco/**/*.obj</exclude>
+                                        <exclude>org/bytedeco/**/*.exp</exclude>
+                                        <!-- openblas 的 JNI 包装：本项目代码零引用，
+                                             但 opencv_core 的 preset 是 @Properties(inherit = openblas.class)，
+                                             JavaCPP 的 Loader 会连带加载 jniopenblas，必须保留。
+                                             jniopenblas_full 是另一个变体，Loader 不会碰，可去掉 -->
+                                        <exclude>org/bytedeco/openblas/**/jniopenblas_full.dll</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 把合并后的 jar 拷到项目 bin/。必须排在 shade 之后：
+                 同一 phase 内的插件按声明顺序执行 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-shaded-jar-to-bin</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.basedir}/bin"/>
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar"
+                                      tofile="${project.basedir}/bin/${project.build.finalName}.jar"
+                                      overwrite="true"/>
+                                <!-- 清掉 shade 误放的未合并 jar -->
+                                <delete file="${project.basedir}/bin/original-${project.build.finalName}.jar"
+                                        failonerror="false"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
