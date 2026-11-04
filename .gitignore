@@ -43,3 +43,5 @@ build/
 /config/
 /native/
 /exports/
+# JVM 崩溃日志（生成物）
+hs_err_pid*.log
