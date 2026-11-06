@@ -106,4 +106,29 @@ public final class CaptureGeometry {
         }
         return normalize(l, t, r, b);
     }
+
+    // 整体平移夹紧：保持尺寸，把矩形全部挪进 bounds 内（选区比 bounds 还大时贴 bounds 原点）
+    // 用于「拖动选区本体」，避免选区被拖出屏幕后亮洞/边框一起飞出可视区
+    public static Rectangle2D clampMove(Rectangle2D rect, Rectangle2D bounds) {
+        double w = rect.getWidth();
+        double h = rect.getHeight();
+        double x = clampTo(rect.getMinX(), bounds.getMinX(), bounds.getMaxX() - w);
+        double y = clampTo(rect.getMinY(), bounds.getMinY(), bounds.getMaxY() - h);
+        return new Rectangle2D(x, y, w, h);
+    }
+
+    // 逐边夹紧：允许自由缩放，但每条边都不越出 bounds
+    // 用于「拖动手柄缩放选区」
+    public static Rectangle2D clampEdges(Rectangle2D rect, Rectangle2D bounds) {
+        double l = clampTo(rect.getMinX(), bounds.getMinX(), bounds.getMaxX() - 1);
+        double t = clampTo(rect.getMinY(), bounds.getMinY(), bounds.getMaxY() - 1);
+        double r = clampTo(rect.getMaxX(), l + 1, bounds.getMaxX());
+        double b = clampTo(rect.getMaxY(), t + 1, bounds.getMaxY());
+        return new Rectangle2D(l, t, r - l, b - t);
+    }
+
+    // 夹紧到 [min, max]；当 min > max 时取 min（容器比目标还小）
+    private static double clampTo(double v, double min, double max) {
+        return Math.max(min, Math.min(Math.max(min, max), v));
+    }
 }

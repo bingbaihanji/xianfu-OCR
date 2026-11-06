@@ -132,6 +132,7 @@ public class AppController {
         }
         CaptureController c = new CaptureController(mode,
                 img -> showImage(img, "截图"),
+                this::savePinImage,
                 () -> activeCapture = null);
         activeCapture = c;
         try {
@@ -365,6 +366,27 @@ public class AppController {
         try {
             BufferedImage out = AnnotatedImageRenderer.render(currentImage, lastResult);
             ImageIO.write(out, "png", f);
+            settings.setLastExportDir(f.getParentFile().getAbsolutePath());
+            view.toast().show("已保存: " + f.getName());
+        } catch (IOException e) {
+            view.toast().showError("保存失败: " + e.getMessage());
+        }
+    }
+
+    // 贴图「另存为」：用户自选保存位置（手动保存不受 jar 目录约束），对话框默认停在导出目录
+    private void savePinImage(BufferedImage img) {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("另存为");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG 图片 (*.png)", "*.png"));
+        fc.setInitialFileName("贴图.png");
+        File init = existingDir(settings.getLastExportDir());
+        fc.setInitialDirectory(init != null ? init : exportsDir().toFile());
+        File f = fc.showSaveDialog(stage);
+        if (f == null) {
+            return;
+        }
+        try {
+            ImageIO.write(img, "png", f);
             settings.setLastExportDir(f.getParentFile().getAbsolutePath());
             view.toast().show("已保存: " + f.getName());
         } catch (IOException e) {
