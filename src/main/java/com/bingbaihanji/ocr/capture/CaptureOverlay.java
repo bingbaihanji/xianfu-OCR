@@ -216,8 +216,9 @@ public class CaptureOverlay {
         sizeLabel.setVisible(false);
         coordLabel.setVisible(false);
         rgbLabel.setVisible(false);
-        // 放大镜画布：应用样式类
+        // 放大镜画布：应用样式类并初始隐藏（否则开场就挂着一个空画布/阴影）
         magnifier.getStyleClass().add("capture-magnifier");
+        magnifier.setVisible(false);
 
         // 创建 8 个手柄小方块：强调色填充 + 白色描边，初始隐藏
         for (int i = 0; i < 8; i++) {
@@ -249,6 +250,9 @@ public class CaptureOverlay {
         root.setOnMouseDragged(this::onDrag);
         root.setOnMouseReleased(this::onRelease);
         root.setOnMouseMoved(this::onMove);
+        // 跨屏时鼠标离开本覆盖层必须收起跟随物，否则放大镜/十字线会残留在屏幕接缝处
+        root.setOnMouseEntered(e -> trackCursor(e.getX(), e.getY()));
+        root.setOnMouseExited(e -> hideChrome());
         root.setOnMouseClicked(this::onClick);
 
         // Stage：透明无边框、置顶、位置与尺寸对齐屏幕
@@ -364,8 +368,16 @@ public class CaptureOverlay {
     // 跟随光标刷新十字线/放大镜/取样标签与光标形状（拖拽中同样调用，
     // 因为拖拽期间 JavaFX 只派发 MOUSE_DRAGGED，不会派发 MOUSE_MOVED）
     private void trackCursor(double x, double y) {
-        updateChrome();
-        if (chromeVisible()) {
+        // 光标已不在本显示器范围内：清掉跟随物再返回
+        // （跨屏后本覆盖层不会再收到 MOUSE_MOVED，不清就会在屏幕接缝处留残影）
+        Rectangle2D bounds = capture.screen().getBounds();
+        if (x < 0 || y < 0 || x >= bounds.getWidth() || y >= bounds.getHeight()) {
+            hideChrome();
+            return;
+        }
+        if (!chromeVisible()) {
+            hideChrome();
+        } else {
             // 显示十字准线并跨满整个 UI 层
             crossH.setVisible(true);
             crossV.setVisible(true);
@@ -378,12 +390,6 @@ public class CaptureOverlay {
             crossV.setStartX(x);
             crossV.setEndX(x);
             showMagnifier(x, y);
-        } else {
-            crossH.setVisible(false);
-            crossV.setVisible(false);
-            magnifier.setVisible(false);
-            coordLabel.setVisible(false);
-            rgbLabel.setVisible(false);
         }
         // 根据是否在选区/手柄上切换光标形状
         Rectangle2D sel = store.selection();
@@ -421,15 +427,19 @@ public class CaptureOverlay {
         return store.selection() == null || rubberBanding;
     }
 
+    // 收起全部跟随物（展开只走 trackCursor，避免在旧位置重新露出）
+    private void hideChrome() {
+        crossH.setVisible(false);
+        crossV.setVisible(false);
+        magnifier.setVisible(false);
+        coordLabel.setVisible(false);
+        rgbLabel.setVisible(false);
+    }
+
+    // 选区状态变化后收起跟随物
     private void updateChrome() {
-        if (chromeVisible()) {
-            magnifier.setVisible(true);
-        } else {
-            crossH.setVisible(false);
-            crossV.setVisible(false);
-            magnifier.setVisible(false);
-            coordLabel.setVisible(false);
-            rgbLabel.setVisible(false);
+        if (!chromeVisible()) {
+            hideChrome();
         }
     }
 
